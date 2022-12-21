@@ -21,7 +21,8 @@
 #define TRUE 1
 #define FALSE 0
 
-#define PAGE_SIZE 256
+#define WRITE_PAGE_SIZE 16
+#define READ_PAGE_SIZE 256
 #define HIGH  1
 #define LOW   0
 #define WRITE 0   //active low
@@ -42,8 +43,9 @@ int st_eeInitFlag;
 
 int main()                                    // Main function
 {
-  int    data;
-  int  read_page[PAGE_SIZE] = {0};         //stores sequential random read values
+  int data;
+  int read_page[READ_PAGE_SIZE] = {0};         //stores sequential random read values
+  int write_page[WRITE_PAGE_SIZE] = {0};  
   struct I2C_EEPROM i2c_eep;    //creation of struct object)
   
   i2c_eep.scl_gpio  = SCL;    //values for i2c_eep
@@ -72,9 +74,14 @@ int main()                                    // Main function
   }
   */
 
+  for(int i=0; i<WRITE_PAGE_SIZE; i++) {      //validation/example code for writepage function
+    write_page[i] = i;
+  }
   
-  i2c_readpage(i2c_eep, 0x10, read_page, 0x10);
-  for(int i=0; i<16; i++) {
+  i2c_writepage(i2c_eep, 0x0, write_page, WRITE_PAGE_SIZE);
+ 
+  i2c_readpage(i2c_eep, 0x0, read_page, READ_PAGE_SIZE);
+  for(int i=0; i<READ_PAGE_SIZE; i++) {
     if(i%16 == 0){
       dprint(xbee, "\n");
     }
@@ -107,7 +114,24 @@ int i2c_writebyte (struct I2C_EEPROM i2c_eep, int byte_add, int data_in)    //wr
 
 int i2c_writepage (struct I2C_EEPROM i2c_eep, int byte_add, int *data_in, int count)
 {
-    
+  init_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio);     //reset
+  start_signal(i2c_eep.scl_gpio, i2c_eep.sda_gpio); //start
+  dev_sel_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio, i2c_eep.dev_add + i2c_eep.page, WRITE);    //device address(with 0 as last bit)
+  
+  if(!return_ack(i2c_eep.scl_gpio, i2c_eep.sda_gpio, COUNTER_VAL)){     //check if ack is received
+    return FALSE;
+  }     
+  byte_add_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio, byte_add);     //byte address(address we want to write in)
+  
+  //create for loop for continuous writing
+  for(int i=0; i<count; i++) {
+    data_in_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio,*(data_in+i));   //read data according to CLK movement, store in address of *data_out(local)
+    if(!return_ack(i2c_eep.scl_gpio, i2c_eep.sda_gpio,COUNTER_VAL)){     //check if ack is received
+      return FALSE;
+    }  
+  }
+  stop_signal(i2c_eep.scl_gpio, i2c_eep.sda_gpio);    //stop
+  return TRUE;
 }
 
 int i2c_readbyte (struct I2C_EEPROM i2c_eep, int byte_add, int *data_out)
