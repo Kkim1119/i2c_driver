@@ -1,4 +1,6 @@
 I2C_project.c
+I2C.h
+I2C.c
 >compiler=C
 >memtype=cmm main ram compact
 >optimize=-Os
