@@ -53,7 +53,7 @@ int i2c_readbyte (struct I2C_EEPROM i2c_eep, int byte_add, int *data_out)
   
   init_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio);     //reset
   start_signal(i2c_eep.scl_gpio, i2c_eep.sda_gpio); //start
-  dev_sel_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio, i2c_eep.dev_add + i2c_eep.page, WRITE);    //device address(with 0 as last bit)
+  dev_sel_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio, i2c_eep.dev_add + i2c_eep.page, WRITE);    //device address(with 0 as last bit, for dummy write)
   
   if(!return_ack(i2c_eep.scl_gpio, i2c_eep.sda_gpio,COUNTER_VAL)){     //check if ack is received
     return FALSE;
@@ -62,7 +62,7 @@ int i2c_readbyte (struct I2C_EEPROM i2c_eep, int byte_add, int *data_out)
   byte_add_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio, byte_add);     //byte address(address we want to write in)
   
   start_signal(i2c_eep.scl_gpio, i2c_eep.sda_gpio); //start
-  dev_sel_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio, i2c_eep.dev_add + i2c_eep.page, READ);    //device address(with 0 as last bit)
+  dev_sel_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio, i2c_eep.dev_add + i2c_eep.page, READ);    //device address(with 1 as last bit)
   
   if(!return_ack(i2c_eep.scl_gpio, i2c_eep.sda_gpio,COUNTER_VAL)){     //check if ack is received
     return FALSE;
@@ -70,7 +70,7 @@ int i2c_readbyte (struct I2C_EEPROM i2c_eep, int byte_add, int *data_out)
   
   *data_out = read_data_out(i2c_eep.scl_gpio, i2c_eep.sda_gpio);    //read data according to CLK movement, store in address of *data_out(local)
   
-  if(!return_nack(i2c_eep.scl_gpio, i2c_eep.sda_gpio,COUNTER_VAL)){     //check if ack is received
+  if(!return_nack(i2c_eep.scl_gpio, i2c_eep.sda_gpio,COUNTER_VAL)){     //check if nack is received
     return FALSE;
   } 
   stop_signal(i2c_eep.scl_gpio, i2c_eep.sda_gpio);    //stop
@@ -83,7 +83,7 @@ int i2c_readpage (struct I2C_EEPROM i2c_eep, int byte_add, int *data_out, int co
   
   init_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio);     //reset
   start_signal(i2c_eep.scl_gpio, i2c_eep.sda_gpio); //start
-  dev_sel_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio, i2c_eep.dev_add + i2c_eep.page, WRITE);    //device address(with 0 as last bit)
+  dev_sel_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio, i2c_eep.dev_add + i2c_eep.page, WRITE);    //device address(with 0 as last bit, for dummy write)
   
   if(!return_ack(i2c_eep.scl_gpio, i2c_eep.sda_gpio,COUNTER_VAL)){     //check if ack is received
     return FALSE;
@@ -92,7 +92,7 @@ int i2c_readpage (struct I2C_EEPROM i2c_eep, int byte_add, int *data_out, int co
   byte_add_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio, byte_add);     //byte address(address we want to write in)
   
   start_signal(i2c_eep.scl_gpio, i2c_eep.sda_gpio); //start
-  dev_sel_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio, i2c_eep.dev_add + i2c_eep.page, READ);    //device address(with 0 as last bit)
+  dev_sel_i2c(i2c_eep.scl_gpio, i2c_eep.sda_gpio, i2c_eep.dev_add + i2c_eep.page, READ);    //device address(with 1 as last bit)
   
   if(!return_ack(i2c_eep.scl_gpio, i2c_eep.sda_gpio,COUNTER_VAL)){     //check if ack is received
     return FALSE;
@@ -101,7 +101,7 @@ int i2c_readpage (struct I2C_EEPROM i2c_eep, int byte_add, int *data_out, int co
     *(data_out+i) = read_data_out(i2c_eep.scl_gpio, i2c_eep.sda_gpio);    //read data according to CLK movement, store in address of *data_out(local)
     if(i == count - 1){
       sda_control(i2c_eep.sda_gpio, HIGH);
-      if(!return_nack(i2c_eep.scl_gpio, i2c_eep.sda_gpio,COUNTER_VAL)){     //check if ack is received
+      if(!return_nack(i2c_eep.scl_gpio, i2c_eep.sda_gpio,COUNTER_VAL)){     //check if nack is received
         return FALSE;
       } 
       stop_signal(i2c_eep.scl_gpio, i2c_eep.sda_gpio);    //stop
